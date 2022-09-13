@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+. "$HERE/_trap"
+
+export NAMESPACE=${NAMESPACE:-planter}
+export VERSION=${VERSION:-1.0}
+export REGISTRY_URL=${REGISTRY_URL:-docker.io}
+
+for ARG in "$@"; do
+	case "$ARG" in
+		-m)
+			MANIFESTS=true
+			;;
+		-c)
+			NAMESPACE=$NAMESPACE VERSION=$VERSION MANIFESTS=$MANIFESTS "$HERE/delete"
+			;;
+		-b)
+			"$HERE/build-container-image"
+			"$HERE/publish-container-image"
+			;;
+	esac
+done
+
+m "deploying operator to namespace \"$NAMESPACE\"..."
+if [ "$MANIFESTS" == true ]; then
+	kubectl_apply_template "$ROOT/assets/kubernetes/custom-resource-definitions.yaml"
+	kubectl_apply_template "$ROOT/assets/kubernetes/namespace.yaml"
+	kubectl_apply_template "$ROOT/assets/kubernetes/planter.yaml"
+
+	m "waiting for operator to start..."
+	kubectl_wait_for_deployment planter-operator
+else
+	planter operator install --namespace="$NAMESPACE" --registry="$REGISTRY_URL" --wait -vv
+fi
+
+m "planting hello world example..."
+planter plugin set z-built-in "$ROOT/assets/python/z-built-in.py" --namespace="$NAMESPACE" -vv
+planter plugin set a-network "$ROOT/examples/hello-world/a-network.sh" --namespace="$NAMESPACE" -vv
+planter seed create hello-world --namespace="$NAMESPACE" --file="$ROOT/examples/hello-world/seed.yaml" --plant -vv
+
+if [ -f "$ROOT/work/config" ]; then
+	m "configuring edge1 cluster..."
+	sleep 5
+	planter cluster config edge1 --planter-namespace="$NAMESPACE" --namespace=network-service --cluster-kubeconfig="$ROOT/work/config" -vv
+fi

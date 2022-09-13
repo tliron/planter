@@ -1,0 +1,13 @@
+.project
+.pydevproject
+.vscode
+
+go.work
+go.work.sum
+
+dist/
+docs/html/
+work/
+
+__pycache__/
+

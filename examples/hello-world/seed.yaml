@@ -1,0 +1,240 @@
+apiVersion: v1
+kind: Namespace
+
+metadata:
+  name: network-service
+
+---
+
+apiVersion: planter.nephio.org/v1alpha1
+kind: Cluster # demo
+
+metadata:
+  name: edge1
+  namespace: network-service # hard dependency
+
+spec:
+  nodes:
+  - kernelConfig: realtime # soft dependency
+    memoryConfig: numa # soft dependency
+    count: 3
+    labels:
+      profile: performance
+  wans:
+  - sd-wan # soft dependency
+
+---
+
+apiVersion: planter.nephio.org/v1alpha1
+kind: WAN # demo
+
+metadata:
+  name: sd-wan
+  namespace: network-service # hard dependency
+
+spec:
+  provider: sd-wan
+
+---
+
+apiVersion: planter.nephio.org/v1alpha1
+kind: KernelConfig # demo
+
+metadata:
+  name: realtime
+  namespace: network-service
+
+spec:
+  realtime: true
+
+---
+
+apiVersion: planter.nephio.org/v1alpha1
+kind: MemoryConfig # demo
+
+metadata:
+  name: numa
+  namespace: network-service
+
+spec:
+  numa: true
+  hugePages: 1Gi
+
+---
+
+apiVersion: v1
+kind: Namespace
+
+metadata:
+  name: cnf
+  annotations:
+    planter.nephio.org/cluster: network-service|edge1 # hard dependency
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+
+metadata:
+  name: cnf
+  namespace: cnf # hard dependency
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+
+metadata:
+  name: cnf
+  namespace: cnf # hard dependency
+
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+
+metadata:
+  name: cnf
+  namespace: cnf # hard dependency
+
+subjects:
+# soft dependency
+- kind: ServiceAccount
+  name: cnf
+  namespace: cnf
+
+roleRef:
+  # soft dependency
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cnf
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cnf
+  namespace: cnf # hard dependency
+  labels:
+    app.kubernetes.io/name: cnf
+    app.kubernetes.io/component: cnf
+  annotations:
+    planter.nephio.org/networks: data-plane # soft dependency
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cnf
+      app.kubernetes.io/component: cnf
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cnf
+        app.kubernetes.io/component: cnf
+    spec:
+      serviceAccountName: cnf # soft dependency
+      containers:
+      - name: main
+        image: docker.io/nginx:1.23.1
+        imagePullPolicy: Always
+      nodeSelector:
+        profile: performance # see Cluster->nodes
+
+---
+
+apiVersion: planter.nephio.org/v1alpha1
+kind: Network # demo
+
+metadata:
+  name: data-plane
+  namespace: cnf # hard dependency
+
+spec:
+  provider: macvlan
+
+---
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: cnf
+  namespace: cnf # hard dependency
+  labels:
+    app.kubernetes.io/name: cnf
+    app.kubernetes.io/component: cnf
+
+spec:
+  type: ClusterIP
+  selector: # soft dependency
+    app.kubernetes.io/name: cnf
+    app.kubernetes.io/component: cnf
+  ports:
+  - name: http
+    protocol: TCP
+    targetPort: 8080
+    port: 8080
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+
+metadata:
+  name: instances.cnf.org
+  annotations:
+    planter.nephio.org/cluster: network-service|edge1 # hard dependency
+
+spec:
+  group: cnf.org
+  names:
+    singular: instance
+    plural: instances
+    kind: Instance
+    listKind: InstanceList
+    categories:
+    - all
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    schema:
+      openAPIV3Schema:
+        type: object
+        required: [ spec ]
+        properties:
+          spec:
+            type: object
+            required: [ mode ]
+            properties:
+              mode:
+                type: string
+          status:
+            type: object
+            properties:
+              mode:
+                type: string
+
+---
+
+apiVersion: cnf.org/v1alpha1
+kind: Instance
+# hard dependency on CRD
+
+metadata:
+  name: cnf
+  namespace: cnf # hard dependency
+
+spec:
+  mode: initializing

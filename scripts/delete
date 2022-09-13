@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
+. "$HERE/_trap"
+
+export NAMESPACE=${NAMESPACE:-planter}
+export VERSION=${VERSION:-1.0}
+
+for ARG in "$@"; do
+	case "$ARG" in
+		-m)
+			MANIFESTS=true
+			;;
+	esac
+done
+
+m "deleting operator from namespace \"$NAMESPACE\"..."
+if [ "$MANIFESTS" == true ]; then
+    #kubectl_delete_template "$ROOT/assets/hello-world.yaml"
+    kubectl_delete_template "$ROOT/assets/kubernetes/planter.yaml"
+    kubectl_delete_template "$ROOT/assets/kubernetes/custom-resource-definitions.yaml"
+    kubectl_delete_template "$ROOT/assets/kubernetes/namespace.yaml"
+    kubectl delete namespace network-service --wait
+else
+    planter operator uninstall --namespace="$NAMESPACE" --wait -vv
+fi

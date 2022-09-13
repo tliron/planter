@@ -1,0 +1,246 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+
+metadata:
+  name: seeds.planter.nephio.org
+
+spec:
+  group: planter.nephio.org
+  names:
+    singular: seed
+    plural: seeds
+    kind: Seed
+    listKind: SeedList
+    categories:
+    - all # will appear in "kubectl get all"
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true # one and only one version must be marked with storage=true
+    subresources: # requires CustomResourceSubresources feature gate enabled
+      status: {}
+    schema:
+      openAPIV3Schema:
+        description: >-
+          Planter seed
+        type: object
+        required: [ spec ]
+        properties:
+          spec:
+            type: object
+            required: [ seedUrl ]
+            properties:
+              seedUrl:
+                description: >-
+                  Full URL of seed (YAML file)
+                type: string
+              planted:
+                description: >-
+                  Whether the seed should be planted
+                type: boolean
+          status:
+            type: object
+            properties:
+              plantedPath:
+                description: >-
+                  Planted seed path or empty if not planted
+                type: string
+    additionalPrinterColumns:
+    - name: PlantedPath
+      description: >-
+        Planted seed path or empty if not planted
+      type: string
+      jsonPath: .status.plantedPath
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+
+metadata:
+  name: clusters.planter.nephio.org
+
+spec:
+  group: planter.nephio.org
+  names:
+    singular: cluster
+    plural: clusters
+    kind: Cluster
+    listKind: ClusterList
+    categories:
+    - all # will appear in "kubectl get all"
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true # one and only one version must be marked with storage=true
+    subresources: # requires CustomResourceSubresources feature gate enabled
+      status: {}
+    schema:
+      openAPIV3Schema:
+        description: >-
+          Planter cluster
+        type: object
+        required: [ spec ]
+        properties:
+          spec:
+            type: object
+            properties:
+              nodes:
+                description: >-
+                  Grouped node configurations
+                type: array
+                items:
+                  type: object
+                  properties:
+                    count:
+                      description: >-
+                        Amount of nodes in this group
+                      type: integer
+                    labels:
+                      description: >-
+                        Labels for the nodes in this group
+                      type: object
+                      items:
+                        type: string
+                    kernelConfig:
+                      description: >-
+                        Optional name of KernelConfig resource for the nodes in this group
+                      type: string
+                    memoryConfig:
+                      description: >-
+                        Optional name of MemoryConfig resource for the nodes in this group
+                      type: string
+              wans:
+                description: >-
+                  WANs for reaching this cluster
+                type: array
+                items:
+                  type: string
+          status:
+            type: object
+            properties:
+              kubeconfigUrl:
+                description: >-
+                  Full URL of kubeconfig (YAML file)
+                type: string
+              context:
+                description: >-
+                  Name of context to use in kubeconfig
+                type: string
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+
+metadata:
+  name: kernelconfigs.planter.nephio.org
+
+spec:
+  group: planter.nephio.org
+  names:
+    singular: kernelconfig
+    plural: kernelconfigs
+    kind: KernelConfig
+    listKind: KernelConfigList
+    categories:
+    - all # will appear in "kubectl get all"
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true # one and only one version must be marked with storage=true
+    schema:
+      openAPIV3Schema:
+        description: >-
+          Planter kernel config
+        type: object
+        required: [ spec ]
+        properties:
+          spec:
+            type: object
+            properties:
+              realtime:
+                description: >-
+                  Whether a realtime kernel should be used
+                type: boolean
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+
+metadata:
+  name: memoryconfigs.planter.nephio.org
+
+spec:
+  group: planter.nephio.org
+  names:
+    singular: memoryconfig
+    plural: memoryconfigs
+    kind: MemoryConfig
+    listKind: MemoryConfigList
+    categories:
+    - all # will appear in "kubectl get all"
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true # one and only one version must be marked with storage=true
+    schema:
+      openAPIV3Schema:
+        description: >-
+          Planter memory config
+        type: object
+        required: [ spec ]
+        properties:
+          spec:
+            type: object
+            properties:
+              numa:
+                description: >-
+                  Whether NUMA should be enabled
+                type: boolean
+              hugePages:
+                description: >-
+                  Size of huge pages to be used
+                type: string
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+
+metadata:
+  name: wans.planter.nephio.org
+
+spec:
+  group: planter.nephio.org
+  names:
+    singular: wan
+    plural: wans
+    kind: WAN
+    listKind: WANList
+    categories:
+    - all # will appear in "kubectl get all"
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true # one and only one version must be marked with storage=true
+    schema:
+      openAPIV3Schema:
+        description: >-
+          Planter WAN
+        type: object
+        required: [ spec ]
+        properties:
+          spec:
+            type: object
+            properties:
+              provider:
+                description: >-
+                  WAN provider
+                type: string
