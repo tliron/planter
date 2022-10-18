@@ -111,9 +111,8 @@ FAQ
 
 [Helm](https://helm.sh/) charts do not solve the chicken-and-egg problem. Some Helm-based solutions
 indeed use multiple Helm charts that are meant to be deployed in order. But you might have to wait a
-*very long time* between them, e.g. if one Helm chart causes a cluster to be installed, it can take
-hours before the cluster is ready. Unlike Planter, Helm is not a "fire and forget" orchestration tool.
+*very long time* between installing them, e.g. if one Helm chart causes a cluster to be installed it
+can take hours before the cluster is ready. Unlike Planter, Helm is not a "fire and forget"
+orchestration tool.
 
-You could potentially use Helm to generate the Planter seed, via the `helm template` command. Note that
-you cannot use a Helm chat directly because Planter needs actual Kubernetes resources for its phase #1
-and #2 analysis.
+You could potentially use Helm to generate the Planter seed, via the `helm template` command.
