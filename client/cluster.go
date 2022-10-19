@@ -34,7 +34,11 @@ func (self *Client) GetClusterKubeConfig(namespace string, clusterName string) (
 	}
 
 	if cluster, err := self.GetCluster(namespace, clusterName); err == nil {
-		return self.GetContent(cluster.Status.KubeConfigURL)
+		if cluster.Status.KubeConfigURL != "" {
+			return self.GetContent(cluster.Status.KubeConfigURL)
+		} else {
+			return "", fmt.Errorf("cluster not configured: %s/%s", namespace, clusterName)
+		}
 	} else {
 		return "", err
 	}

@@ -16,7 +16,7 @@ func (self *Client) GetContent(url string) (string, error) {
 		if err := self.Exec(self.Namespace, podName, "operator", nil, &builder, "cat", url); err == nil {
 			return strings.TrimRight(builder.String(), "\n"), nil
 		} else {
-			return "", err
+			return "", fmt.Errorf("no content at: %s", url)
 		}
 	} else {
 		return "", err

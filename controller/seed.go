@@ -34,7 +34,7 @@ func (self *Controller) plantSeed(seed *resources.Seed) error {
 }
 
 func (self *Controller) reconcileSeed(seed *resources.Seed) error {
-	if seed.Spec.Planted {
+	if seed.Spec.Planted && (seed.Status.PlantedPath != "") {
 		if content, err := self.Client.GetContent(seed.Status.PlantedPath); err == nil {
 			if resources, err := NewResources(content, self); err == nil {
 				for {

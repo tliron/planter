@@ -81,9 +81,10 @@ func (self *Resources) Reconcile(resource ard.StringMap) error {
 					}
 				}
 			} else {
-				if !kuberneteserrors.IsNotFound(err) {
+				if kuberneteserrors.IsNotFound(err) {
 					self.clients.controller.Log.Warningf("cluster not found: %s", clusterName)
-					return err
+				} else {
+					self.clients.controller.Log.Warningf("%s", clusterName)
 				}
 			}
 		} else {
