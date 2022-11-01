@@ -197,9 +197,6 @@ func (self *Client) createOperatorClusterRoleBinding(serviceAccount *core.Servic
 	})
 }
 
-var true_ = true
-var false_ = false
-
 func (self *Client) createOperatorDeployment(sourceRegistryHost string, serviceAccount *core.ServiceAccount, replicas int32) (*apps.Deployment, error) {
 	appName := fmt.Sprintf("%s-operator", self.NamePrefix)
 	labels := self.Labels(appName, "operator", self.Namespace)

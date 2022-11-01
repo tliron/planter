@@ -22,7 +22,10 @@ if [ "$MANIFESTS" == true ]; then
     kubectl_delete_template "$ROOT/assets/kubernetes/planter.yaml"
     kubectl_delete_template "$ROOT/assets/kubernetes/custom-resource-definitions.yaml"
     kubectl_delete_template "$ROOT/assets/kubernetes/namespace.yaml"
-    kubectl delete namespace network-service --wait
 else
     planter operator uninstall --namespace="$NAMESPACE" --wait -vv
 fi
+
+m "deleting hello world example..."
+kubectl delete all --all --namespace network-service --wait
+kubectl delete namespace network-service --wait || true

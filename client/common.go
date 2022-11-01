@@ -12,6 +12,9 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var true_ = true
+var false_ = false
+
 func (self *Client) GetOperatorServiceAccount() (*core.ServiceAccount, error) {
 	return self.Kubernetes.CoreV1().ServiceAccounts(self.Namespace).Get(self.Context, self.NamePrefix, meta.GetOptions{})
 }
@@ -165,12 +168,14 @@ func (self *Client) VolumeSource(size string) core.VolumeSource {
 }
 
 func (self *Client) DefaultSecurityContext() *core.SecurityContext {
+	var user int64 = 1000
 	return &core.SecurityContext{
 		AllowPrivilegeEscalation: &false_,
 		Capabilities: &core.Capabilities{
 			Drop: []core.Capability{"ALL"},
 		},
 		RunAsNonRoot: &true_,
+		RunAsUser:    &user,
 		SeccompProfile: &core.SeccompProfile{
 			Type: core.SeccompProfileTypeRuntimeDefault,
 		},

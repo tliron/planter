@@ -8,23 +8,12 @@ import (
 	"github.com/tliron/kutil/kubernetes"
 	"github.com/tliron/kutil/util"
 	"github.com/tliron/planter/controller"
-	"golang.org/x/term"
 )
 
 func Shell(appNameSuffix string, containerName string) {
-	// We need stdout to be in "raw" mode
-	fd := int(os.Stdout.Fd())
-	state, err := term.MakeRaw(fd)
-	util.FailOnError(err)
-	handle := util.OnExitError(func() error {
-		return term.Restore(fd, state)
+	util.ToRawTerminal(func() error {
+		return NewClient().Shell(appNameSuffix, containerName, os.Stdin, os.Stdout, os.Stderr)
 	})
-	err = NewClient().Shell(appNameSuffix, containerName, os.Stdin, os.Stdout, os.Stderr)
-	if err != nil {
-		handle.Cancel()
-		term.Restore(fd, state)
-		util.FailOnError(err)
-	}
 }
 
 func (self *Client) Shell(appNameSuffix string, containerName string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
