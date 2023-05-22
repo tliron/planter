@@ -3,7 +3,7 @@ package client
 import (
 	contextpkg "context"
 
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 	planterpkg "github.com/tliron/planter/apis/clientset/versioned"
 	apiextensionspkg "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kubernetespkg "k8s.io/client-go/kubernetes"
@@ -30,7 +30,7 @@ type Client struct {
 	CachePath         string
 
 	Context contextpkg.Context
-	Log     logging.Logger
+	Log     commonlog.Logger
 }
 
 func NewClient(kubernetes kubernetespkg.Interface, apiExtensions apiextensionspkg.Interface, planter planterpkg.Interface, rest restpkg.Interface, config *restpkg.Config, context contextpkg.Context, clusterRole string, namespace string, namePrefix string, partOf string, managedBy string, operatorImageName string, cachePath string, logName string) *Client {
@@ -48,6 +48,6 @@ func NewClient(kubernetes kubernetespkg.Interface, apiExtensions apiextensionspk
 		OperatorImageName: operatorImageName,
 		CachePath:         cachePath,
 		Context:           context,
-		Log:               logging.GetLogger(logName),
+		Log:               commonlog.GetLogger(logName),
 	}
 }

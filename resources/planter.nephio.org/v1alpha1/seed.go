@@ -3,7 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 
-	"github.com/tliron/kutil/ard"
+	"github.com/tliron/go-ard"
 	group "github.com/tliron/planter/resources/planter.nephio.org"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"

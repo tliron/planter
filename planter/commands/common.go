@@ -3,14 +3,14 @@ package commands
 import (
 	contextpkg "context"
 
-	"github.com/tliron/kutil/logging"
+	"github.com/tliron/commonlog"
 )
 
 const toolName = "planter"
 
 var context = contextpkg.TODO()
 
-var log = logging.GetLogger(toolName)
+var log = commonlog.GetLogger(toolName)
 
 var tail int
 var follow bool
