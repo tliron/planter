@@ -4,11 +4,13 @@ package fake
 
 import (
 	"context"
+	json "encoding/json"
+	"fmt"
 
+	planternephioorgv1alpha1 "github.com/tliron/planter/apis/applyconfiguration/planter.nephio.org/v1alpha1"
 	v1alpha1 "github.com/tliron/planter/resources/planter.nephio.org/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -20,9 +22,9 @@ type FakeSeeds struct {
 	ns   string
 }
 
-var seedsResource = schema.GroupVersionResource{Group: "planter.nephio.org", Version: "v1alpha1", Resource: "seeds"}
+var seedsResource = v1alpha1.SchemeGroupVersion.WithResource("seeds")
 
-var seedsKind = schema.GroupVersionKind{Group: "planter.nephio.org", Version: "v1alpha1", Kind: "Seed"}
+var seedsKind = v1alpha1.SchemeGroupVersion.WithKind("Seed")
 
 // Get takes name of the seed, and returns the corresponding seed object, and an error if there is any.
 func (c *FakeSeeds) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Seed, err error) {
@@ -118,6 +120,51 @@ func (c *FakeSeeds) DeleteCollection(ctx context.Context, opts v1.DeleteOptions,
 func (c *FakeSeeds) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Seed, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(seedsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Seed{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Seed), err
+}
+
+// Apply takes the given apply declarative configuration, applies it and returns the applied seed.
+func (c *FakeSeeds) Apply(ctx context.Context, seed *planternephioorgv1alpha1.SeedApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.Seed, err error) {
+	if seed == nil {
+		return nil, fmt.Errorf("seed provided to Apply must not be nil")
+	}
+	data, err := json.Marshal(seed)
+	if err != nil {
+		return nil, err
+	}
+	name := seed.Name
+	if name == nil {
+		return nil, fmt.Errorf("seed.Name must be provided to Apply")
+	}
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(seedsResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.Seed{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Seed), err
+}
+
+// ApplyStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+func (c *FakeSeeds) ApplyStatus(ctx context.Context, seed *planternephioorgv1alpha1.SeedApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.Seed, err error) {
+	if seed == nil {
+		return nil, fmt.Errorf("seed provided to Apply must not be nil")
+	}
+	data, err := json.Marshal(seed)
+	if err != nil {
+		return nil, err
+	}
+	name := seed.Name
+	if name == nil {
+		return nil, fmt.Errorf("seed.Name must be provided to Apply")
+	}
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(seedsResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1alpha1.Seed{})
 
 	if obj == nil {
 		return nil, err
